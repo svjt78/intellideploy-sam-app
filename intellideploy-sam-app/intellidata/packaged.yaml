@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'sam-app
+
+  Sample SAM Template for sam-app
+
+  '
+Globals:
+  Function:
+    Timeout: 180
+Resources:
+  PostProductFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://intellidatastatic/800c4ec5190abc3d33d4d49539cd2422
+      Handler: productpost.lambda_handler
+      Runtime: python3.7
+      Events:
+        intellidataProductAPI:
+          Type: Api
+          Properties:
+            Path: /intellidataProductAPI
+            Method: post
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:DeleteItem
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+          Resource:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: AWS::Region
+              - ':'
+              - Ref: AWS::AccountId
+              - :table/intellidataTable
+  GetProductFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://intellidatastatic/49001dc72a46966f69317ed06bc65764
+      Handler: productget.lambda_handler
+      Runtime: python3.7
+      Events:
+        intellidataProductAPI:
+          Type: Api
+          Properties:
+            Path: /intellidataProductAPI
+            Method: get
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - dynamodb:GetItem
+          - dynamodb:Query
+          Resource:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:dynamodb:'
+              - Ref: AWS::Region
+              - ':'
+              - Ref: AWS::AccountId
+              - :table/intellidataTable
+  intellidataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: intellidataTable
+      AttributeDefinitions:
+      - AttributeName: LOCAL_ID
+        AttributeType: N
+      - AttributeName: ITEM_ID
+        AttributeType: N
+      KeySchema:
+      - AttributeName: LOCAL_ID
+        KeyType: HASH
+      - AttributeName: ITEM_ID
+        KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+Outputs:
+  intellidataProductAPI:
+    Description: API Gateway endpoint URL for Prod stage for nrt_post function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/intellidataProductAPI/
+  PostProductFunction:
+    Description: NRT Post Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - PostProductFunction
+      - Arn
+  PostProductFunctionIamRole:
+    Description: Implicit IAM Role created for NRT Post function
+    Value:
+      Fn::GetAtt:
+      - PostProductFunctionRole
+      - Arn
+  GetProductFunction:
+    Description: NRT Get Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - GetProductFunction
+      - Arn
+  GetProductFunctionIamRole:
+    Description: Implicit IAM Role created for NRT Get function
+    Value:
+      Fn::GetAtt:
+      - GetProductFunctionRole
+      - Arn
+  intellidataTable:
+    Description: DynamoDB table ARN
+    Value:
+      Fn::GetAtt:
+      - intellidataTable
+      - Arn

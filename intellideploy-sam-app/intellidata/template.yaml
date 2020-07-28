@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  Sample SAM Template for sam-app
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 180
+
+Resources:
+  PostProductFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: productpost/
+      Handler: productpost.lambda_handler
+      Runtime: python3.7
+      Events:
+        intellidataProductAPI:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /intellidataProductAPI
+            Method: post
+      Policies:
+          - Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:DeleteItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:UpdateItem'
+                Resource:
+                  'Fn::Join':
+                    - ''
+                    - - 'arn:aws:dynamodb:'
+                      - Ref: 'AWS::Region'
+                      - ':'
+                      - Ref: 'AWS::AccountId'
+                      - ':table/intellidataTable'
+
+
+  GetProductFunction:
+      Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+      Properties:
+        CodeUri: productget/
+        Handler: productget.lambda_handler
+        Runtime: python3.7
+        Events:
+          intellidataProductAPI:
+            Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+            Properties:
+              Path: /intellidataProductAPI
+              Method: get
+        Policies:
+                - Version: '2012-10-17'
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - 'dynamodb:GetItem'
+                        - 'dynamodb:Query'
+                      Resource:
+                        'Fn::Join':
+                          - ''
+                          - - 'arn:aws:dynamodb:'
+                            - Ref: 'AWS::Region'
+                            - ':'
+                            - Ref: 'AWS::AccountId'
+                            - ':table/intellidataTable'
+
+
+  intellidataTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: intellidataTable
+      AttributeDefinitions:
+        - AttributeName: LOCAL_ID
+          AttributeType: N
+        - AttributeName: ITEM_ID
+          AttributeType: N
+      KeySchema:
+        - AttributeName: LOCAL_ID
+          KeyType: HASH
+        - AttributeName: ITEM_ID
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  intellidataProductAPI:
+    Description: "API Gateway endpoint URL for Prod stage for nrt_post function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/intellidataProductAPI/"
+  PostProductFunction:
+    Description: "NRT Post Lambda Function ARN"
+    Value: !GetAtt PostProductFunction.Arn
+  PostProductFunctionIamRole:
+    Description: "Implicit IAM Role created for NRT Post function"
+    Value: !GetAtt PostProductFunctionRole.Arn
+  GetProductFunction:
+    Description: "NRT Get Lambda Function ARN"
+    Value: !GetAtt GetProductFunction.Arn
+  GetProductFunctionIamRole:
+    Description: "Implicit IAM Role created for NRT Get function"
+    Value: !GetAtt GetProductFunctionRole.Arn
+  intellidataTable:
+    Description: "DynamoDB table ARN"
+    Value: !GetAtt intellidataTable.Arn

@@ -52,7 +52,7 @@ Resources:
           intellidataProductAPI:
             Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
             Properties:
-              Path: /intellidataProductAPI
+              Path: /intellidataProductAPI/latest
               Method: get
         Policies:
                 - Version: '2012-10-17'
@@ -70,25 +70,111 @@ Resources:
                             - Ref: 'AWS::AccountId'
                             - ':table/intellidataTable'
 
+  RefreshProductFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+          CodeUri: refreshproduct/
+          Handler: refreshproduct.lambda_handler
+          Runtime: python3.7
+          Events:
+            intellidataProductAPI:
+              Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+              Properties:
+                Path: /intellidataProductAPI/refresh
+                Method: get
+          Policies:
+                  - Version: '2012-10-17'
+                    Statement:
+                      - Effect: Allow
+                        Action:
+                          - 'dynamodb:GetItem'
+                          - 'dynamodb:Query'
+                        Resource:
+                          'Fn::Join':
+                            - ''
+                            - - 'arn:aws:dynamodb:'
+                              - Ref: 'AWS::Region'
+                              - ':'
+                              - Ref: 'AWS::AccountId'
+                              - ':table/intellidataTable'
+
+  GetProductHistoryFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: productgethistory/
+      Handler: productgethistory.lambda_handler
+      Runtime: python3.7
+      Events:
+        intellidataProductAPI:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /intellidataProductAPI/history
+            Method: get
+      Policies:
+              - Version: '2012-10-17'
+                Statement:
+                  - Effect: Allow
+                    Action:
+                      - 'dynamodb:GetItem'
+                      - 'dynamodb:Query'
+                    Resource:
+                      'Fn::Join':
+                        - ''
+                        - - 'arn:aws:dynamodb:'
+                          - Ref: 'AWS::Region'
+                          - ':'
+                          - Ref: 'AWS::AccountId'
+                          - ':table/intellidataTable'
+
+
+  BulkPostProductFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: bulkproductpost/
+      Handler: bulkproductpost.lambda_handler
+      Runtime: python3.7
+      Events:
+        intellidataProductAPI:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /intellidataProductAPI/upload
+            Method: post
+      Policies:
+          - Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:DeleteItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:UpdateItem'
+                Resource:
+                  'Fn::Join':
+                    - ''
+                    - - 'arn:aws:dynamodb:'
+                      - Ref: 'AWS::Region'
+                      - ':'
+                      - Ref: 'AWS::AccountId'
+                      - ':table/intellidataTable'
+
 
   intellidataTable:
     Type: 'AWS::DynamoDB::Table'
     Properties:
       TableName: intellidataTable
       AttributeDefinitions:
-        - AttributeName: LOCAL_ID
-          AttributeType: N
+        - AttributeName: PRODUCT_ID
+          AttributeType: S
         - AttributeName: ITEM_ID
           AttributeType: N
       KeySchema:
-        - AttributeName: LOCAL_ID
+        - AttributeName: PRODUCT_ID
           KeyType: HASH
         - AttributeName: ITEM_ID
           KeyType: RANGE
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
-
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

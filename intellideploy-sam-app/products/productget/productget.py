@@ -12,16 +12,16 @@ def lambda_handler(event, context):
     # select the table
     table = dynamodb.Table('intellidataTable')
 
-    ident = int(event['queryStringParameters']['ident'])
+    ident = event['queryStringParameters']['ident']
 
     try:
          #response = table.get_item(Key={'LOCAL_ID': ident, 'ITEM_ID': ts})
          response = table.query(
-            KeyConditionExpression=Key('LOCAL_ID').eq(ident), ScanIndexForward=False
+            KeyConditionExpression=Key('PRODUCT_ID').eq(ident), ScanIndexForward=False
          )
 
          data = response['Items'][0]
-        
+
          return {
                     'statusCode': 200,
                     'headers': {'Content-Type': 'application/json'},

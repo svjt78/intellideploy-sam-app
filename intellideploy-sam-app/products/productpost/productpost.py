@@ -19,9 +19,9 @@ def lambda_handler(event, context):
 	try:
 		table.put_item(
 	        Item={
-				'LOCAL_ID': event["id"],
-				'ITEM_ID': ts,
 	            'PRODUCT_ID': event["productid"],
+	            'LOCAL_ID': event["id"],
+				'ITEM_ID': ts,
 	            'NAME': event["name"],
 	            'TYPE': event["type"],
 	            'SLUG': event["slug"],
@@ -31,7 +31,10 @@ def lambda_handler(event, context):
 	            'CREATOR': event["creator"],
 	            'CREATE_DATE': event["product_date"],
 	            'PHOTO': event["photo"],
-	            'CONNECTION': event["backend_SOR_connection"]
+	            'CONNECTION': event["backend_SOR_connection"],
+				'RECORD_STATUS': event["record_status"],
+				'COMMIT_INDICATOR': event["commit_indicator"],
+				'RESPONSE': event["response"]
 
 	           }
 	    )
